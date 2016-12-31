@@ -1,0 +1,97 @@
+Codegate 2016 똥쌋던거 ㅜㅜ 
+length check 
+a5 > 200 || a5 < 15
+
+15글자 ~ 200글자
+
+.text:0000000000401A06 loc_401A06:                             ; CODE XREF: main_chkchk+95Fj
+.text:0000000000401A06                 lea     rbx, [rcx+rax*8]
+.text:0000000000401A0A                 mov     qword ptr [rbx], 1
+.text:0000000000401A11                 jmp     loc_40193D
+
+.text:0000000000401C09 loc_401C09:                             ; CODE XREF: main_chkchk+1382j
+.text:0000000000401C09                 lea     rbx, [rcx+rax*8]
+.text:0000000000401C0D                 mov     qword ptr [rbx], 1
+
+loc_401CEC:
+lea     rbx, [rcx+rax*8]
+mov     qword ptr [rbx]
+
+loc_401DCB:
+lea     rbx, [rcx+rax*8]
+mov     qword ptr [rbx], 1
+
+loc_401EC0:
+lea     rbx, [rcx+rax*8]
+mov     qword ptr [rbx], 1
+
+loc_40258E:
+lea     rbx, [rcx+rax*8]
+mov     qword ptr [rbx], 1
+jmp     loc_401B2E
+
+Breakpoint 1, 0x0000000000401ffe in main.chkchk (input=..., ret=0) at /home/cdpython/codegate/final/rev/rev.go:150
+150     in /home/cdpython/codegate/final/rev/rev.go
+(gdb) i r rsi
+rsi            0xc820030c00     859530529792
+
+Breakpoint 1, 0x0000000000401ffe in main.chkchk (input=..., ret=0) at /home/cdpython/codegate/final/rev/rev.go:150
+150     in /home/cdpython/codegate/final/rev/rev.go
+(gdb) i r rsi
+rsi            0xc820098000     859530952704
+
+1대입
+b *0x401a0a
+b *0x401c0d
+b *0x401cf0
+b *0x401dcf
+b *0x401ec4
+b *0x402592
+b *0x40269b
+
+-1대입 
+b *0x401800
+b *0x4018c1
+b *0x401a8e
+b *0x401b27
+b *0x401f56
+b *0x4022ef
+b *0x4023d1
+b *0x4024b1
+b *0x40274d
+
+17
+input
+(gdb) x/x 0xc820086080
+0xc820086080:   0x64647361
+(gdb) 
+0xc820086084:   0x64646464
+(gdb) 
+0xc820086088:   0x64646464
+(gdb) 
+0xc82008608c:   0x64646464
+(gdb) 
+0xc820086090:   0x64646464
+(gdb) 
+0xc820086094:   0x64646464
+(gdb) 
+0xc820086098:   0x00000a64
+
+Breakpoint 1, main.chkchk (input=..., ret=1) at /home/cdpython/codegate/final/rev/rev.go:28
+28      in /home/cdpython/codegate/final/rev/rev.go
+에서 $rsp+0x8에 input.
+
+cmp     ebx, 7Bh 첫바이트 '{'이랑 비교.
+
+rwatch *address if $pc>0x401110 && $pc<0x40283A
+
+{qqqqqqqx45678901}
+
+{68999999999999981234567812345678}
+{681D62F73B520A4F9063B7128FF0D645}
+
+클리어!
+999\x0099990000000000
+
+golang reversing 특징 정리.
+main_main안의 main함수의 코드가 실행됨.
