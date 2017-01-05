@@ -1,4 +1,4 @@
-Codegate 2016 똥쌋던거 ㅜㅜ 
+﻿Codegate 2016 똥쌋던거 ㅜㅜ 
 length check 
 a5 > 200 || a5 < 15
 
@@ -94,4 +94,3 @@ rwatch *address if $pc>0x401110 && $pc<0x40283A
 999\x0099990000000000
 
 golang reversing 특징 정리.
-main_main안의 main함수의 코드가 실행됨.
