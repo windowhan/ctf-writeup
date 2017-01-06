@@ -1,0 +1,97 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
+
+int main(int argc, char* argv[]){
+     char fname[128];
+     unsigned long long otp[2];
+
+     if(argc!=2){
+          printf("usage : ./otp [passcode]\n");
+          return 0;
+     }
+
+     int fd = open("/dev/urandom", O_RDONLY);
+     if(fd==-1) exit(-1);
+
+     if(read(fd, otp, 16)!=16) exit(-1);
+     close(fd);
+
+     sprintf(fname, "/tmp/%llu", otp[0]);
+     FILE* fp = fopen(fname, "w");
+     if(fp==NULL){ exit(-1); }
+     fwrite(&otp[1], 8, 1, fp);
+     fclose(fp);
+
+     printf("OTP generated.\n");
+
+     unsigned long long passcode=0;
+     FILE* fp2 = fopen(fname, "r");
+     if(fp2==NULL){ exit(-1); }
+     fread(&passcode, 8, 1, fp2);
+     fclose(fp2);
+    
+     if(strtoul(argv[1], 0, 16) == passcode){
+          printf("Congratz!\n");
+          system("/bin/cat flag");
+     }
+     else{
+          printf("OTP mismatch\n");
+     }
+
+     unlink(fname);
+     return 0;
+}
+
+
+signal은 blocking되지않음.
+^Croot@ubuntu:~/pwnable.kr/otp# ulimit -a
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) 0
+pending signals                 (-i) 7872
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 1024
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 7872
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+root@ubuntu:~/pwnable.kr/otp# cat loader.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+
+void (*old_fun)(int);
+void new_SIGXFSZ(int signo)
+{
+     printf("signo : %d\n",signo);
+}
+
+int main(void)
+{
+     int pid;
+     //old_fun = signal(SIGXFSZ,new_SIGXFSZ);
+     old_fun = signal(SIGXFSZ,SIG_IGN);
+     //ssdleep(3);sd
+     pid = getpid();
+     printf("%d\n",pid);
+     //sleep(20);
+     system("ulimit -f 0;./vuln 0");
+}
+
+signal 핸들러를 등록할 때, SIG_IGN을 넣어주면
+특정 SIGNAL이 발생해서 프로그램이 발생할 때도 그냥 지나칠수있음
+
+ulimit으로 file size를 0으로 두면 fopen할 때, 파일용량초과시 발생하는 SIGNAL인 SIGXFSZ가 발생되는데 signal함수의 2번째 인자를 SIG_IGN을 넣어서 해당 시그널이 발생하면 continue하게함.
+그럼 fp가 NULL로 세팅되고 fread할때 파일내용이 저장되는 버퍼에도 NULL이 저장됨.
+
+따라서 passcode는 0일 것이고 그냥 0넣으면 끝남 ㅋ
